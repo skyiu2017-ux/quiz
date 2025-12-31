@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>시간의 감옥 - 지하 25층 탈출</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(120, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(0, 255, 200, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 0, 128, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: linear-gradient(145deg, rgba(20, 20, 35, 0.95), rgba(10, 10, 20, 0.98));
+            border: 2px solid transparent;
+            border-image: linear-gradient(135deg, #00ffc8, #7b2fff, #ff0080) 1;
+            border-radius: 20px;
+            box-shadow: 
+                0 0 60px rgba(123, 47, 255, 0.3),
+                0 0 100px rgba(0, 255, 200, 0.1),
+                inset 0 0 60px rgba(0, 0, 0, 0.5);
+            padding: 35px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #00ffc8, #7b2fff, #ff0080, #00ffc8);
+            border-radius: 22px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+            background-size: 300% 300%;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, rgba(20, 20, 35, 0.98), rgba(10, 10, 20, 0.99));
+            border-radius: 18px;
+            z-index: -1;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .floor-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ffc8, #7b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 200, 0.5);
+            margin-bottom: 8px;
+            letter-spacing: 4px;
+            filter: drop-shadow(0 0 20px rgba(123, 47, 255, 0.5));
+        }
+
+        .era-display {
+            font-size: 1.1em;
+            color: #a0a0b0;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            color: #00ffc8;
+            text-shadow: 0 0 15px rgba(0, 255, 200, 0.7);
+            margin-bottom: 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(123, 47, 255, 0.1);
+            border: 1px solid rgba(123, 47, 255, 0.3);
+            border-radius: 20px;
+        }
+
+        .stat-label {
+            color: #a0a0b0;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: #ff0080;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+            border: 1px solid rgba(123, 47, 255, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #7b2fff 0%, #00ffc8 50%, #ff0080 100%);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.6);
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .story-box {
+            background: rgba(123, 47, 255, 0.05);
+            border: 1px solid rgba(123, 47, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            line-height: 1.9;
+            font-size: 1.05em;
+            color: #d0d0e0;
+        }
+
+        .question {
+            font-size: 1.25em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #00ffc8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .choice-btn {
+            background: linear-gradient(135deg, rgba(123, 47, 255, 0.1), rgba(0, 255, 200, 0.05));
+            border: 1px solid rgba(123, 47, 255, 0.3);
+            color: #ffffff;
+            padding: 18px 25px;
+            font-size: 1.05em;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.15s ease-out;
+            text-align: left;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        @media (hover: hover) {
+            .choice-btn:hover {
+                background: linear-gradient(135deg, rgba(123, 47, 255, 0.2), rgba(0, 255, 200, 0.15));
+                border-color: #00ffc8;
+                transform: translateX(8px);
+                box-shadow: 0 0 30px rgba(0, 255, 200, 0.3);
+            }
+        }
+
+        .choice-btn:active {
+            transform: scale(0.98);
+            background: linear-gradient(135deg, rgba(123, 47, 255, 0.3), rgba(0, 255, 200, 0.2));
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, rgba(20, 20, 35, 0.98), rgba(10, 10, 20, 0.99));
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #00ffc8, #7b2fff, #ff0080) 1;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(123, 47, 255, 0.4);
+            animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-content h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #00ffc8, #7b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-content p {
+            font-size: 1.1em;
+            line-height: 1.7;
+            margin: 15px 0;
+            color: #d0d0e0;
+        }
+
+        .modal-btn {
+            background: linear-gradient(135deg, #7b2fff, #00ffc8);
+            border: none;
+            color: #0a0a0f;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 25px;
+            margin-top: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 25px rgba(123, 47, 255, 0.4);
+            font-family: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 35px rgba(0, 255, 200, 0.5);
+        }
+
+        #introScreen {
+            text-align: center;
+        }
+
+        .intro-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff0080, #7b2fff, #00ffc8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 30px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(123, 47, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(0, 255, 200, 0.8)); }
+        }
+
+        .intro-story {
+            font-size: 1.1em;
+            line-height: 2;
+            color: #b0b0c0;
+            margin-bottom: 30px;
+            text-align: left;
+            padding: 25px;
+            background: rgba(123, 47, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(123, 47, 255, 0.2);
+        }
+
+        .name-input-section {
+            margin: 30px 0;
+        }
+
+        .name-input-section label {
+            display: block;
+            margin-bottom: 12px;
+            color: #00ffc8;
+            font-size: 1.1em;
+        }
+
+        .name-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px 20px;
+            font-size: 1.1em;
+            border: 2px solid rgba(123, 47, 255, 0.5);
+            border-radius: 12px;
+            background: rgba(10, 10, 20, 0.8);
+            color: #ffffff;
+            text-align: center;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #00ffc8;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+        }
+
+        .name-input::placeholder {
+            color: #606070;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #ff0080, #7b2fff);
+            border: none;
+            color: #ffffff;
+            padding: 18px 60px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 30px;
+            margin-top: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 30px rgba(255, 0, 128, 0.4);
+            font-family: inherit;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 10px 40px rgba(255, 0, 128, 0.6);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .leaderboard-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 0, 128, 0.2);
+            border: 1px solid rgba(255, 0, 128, 0.5);
+            color: #ff0080;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-family: inherit;
+            z-index: 10;
+        }
+
+        .leaderboard-btn:hover {
+            background: rgba(255, 0, 128, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.4);
+        }
+
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 255, 200, 0.2);
+            border: 1px solid rgba(0, 255, 200, 0.5);
+            color: #00ffc8;
+            padding: 10px 20px;
+            font-size: 0.95em;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-family: inherit;
+            z-index: 10;
+            text-decoration: none;
+        }
+
+        .home-btn:hover {
+            background: rgba(0, 255, 200, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.4);
+        }
+
+        .leaderboard-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ff0080, #7b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th {
+            padding: 12px;
+            text-align: left;
+            color: #00ffc8;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(0, 255, 200, 0.3);
+            font-size: 0.9em;
+        }
+
+        .leaderboard-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(123, 47, 255, 0.2);
+            color: #d0d0e0;
+        }
+
+        .leaderboard-table tr:hover td {
+            background: rgba(123, 47, 255, 0.1);
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #1a1a1a;
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #e0e0e0, #a0a0a0);
+            color: #1a1a1a;
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #cd7f32, #8b4513);
+            color: #ffffff;
+        }
+
+        .no-records {
+            text-align: center;
+            color: #606070;
+            padding: 30px;
+            font-size: 1.1em;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 200, 0.3);
+            border-top-color: #00ffc8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .setup-notice {
+            background: rgba(255, 0, 128, 0.1);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #ff9999;
+        }
+
+        .setup-notice code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .shock-effect {
+            animation: electricShock 0.5s;
+        }
+
+        @keyframes electricShock {
+            0%, 100% { filter: brightness(1); }
+            25% { filter: brightness(2) hue-rotate(90deg); }
+            50% { filter: brightness(0.5); }
+            75% { filter: brightness(2) hue-rotate(-90deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: translateY(-30px) scale(0.95);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-glow {
+            animation: successPulse 1s;
+        }
+
+        @keyframes successPulse {
+            0%, 100% { box-shadow: 0 0 60px rgba(123, 47, 255, 0.3); }
+            50% { box-shadow: 0 0 100px rgba(0, 255, 200, 0.8); }
+        }
+
+        .collapse-warning {
+            animation: collapseFlash 0.8s ease-in-out;
+        }
+
+        @keyframes collapseFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.2); }
+        }
+
+        .danger-text {
+            color: #ff4444 !important;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .floor-display {
+                font-size: 2.2em;
+            }
+
+            .intro-title {
+                font-size: 1.8em;
+            }
+
+            .stats-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .leaderboard-btn, .home-btn {
+                position: static;
+                margin-bottom: 10px;
+                display: inline-block;
+            }
+
+            .top-buttons {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 8px 5px;
+                font-size: 0.85em;
+            }
+        }
+
+        #gameScreen {
+            display: none;
+        }
+
+        #leaderboardScreen {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="gameContainer">
+        <a href="index.html" class="home-btn">🏠 학년 선택</a>
+        <button class="leaderboard-btn" onclick="showLeaderboard()">🏆 명예의 전당</button>
+
+        <!-- 인트로 화면 -->
+        <div id="introScreen">
+            <h1 class="intro-title">⏳ 시간의 감옥</h1>
+            <div class="intro-story">
+                <p>📜 <strong style="color: #ff0080;">[긴급 경보]</strong> 시공간 붕괴 감지!</p>
+                <p>시간의 수호자였던 당신은 역사 왜곡 세력의 함정에 빠져<br>
+                <strong style="color: #7b2fff;">지하 25층 시간의 감옥</strong>에 갇히고 말았습니다.</p>
+                <p>이 감옥은 잘못된 답을 선택할 때마다 <strong style="color: #ff0080;">시공간 균열</strong>이 확대됩니다.<br>
+                균열이 완전히 열리면... <span style="color: #ff4444;">역사 자체가 소멸합니다.</span></p>
+                <p style="margin-top: 15px;">각 층의 <strong style="color: #00ffc8;">역사의 문</strong>을 열어 지상으로 탈출하세요.<br>
+                오직 <strong>올바른 역사 지식</strong>만이 문을 열 수 있습니다.</p>
+                <p style="color: #ff0080; font-weight: bold; margin-top: 20px;">⚠️ 경고: 5번의 오답 = 시공간 완전 붕괴</p>
+                <p style="color: #00ffc8;">🛡️ B10층 통과 시 안전지대 활성화!</p>
+            </div>
+
+            <div class="name-input-section">
+                <label for="playerName">시간 수호자의 이름을 입력하세요</label>
+                <input type="text" id="playerName" class="name-input" placeholder="이름 (2~10자)" maxlength="10">
+            </div>
+
+            <button class="start-btn" onclick="startGame()" id="startBtn">시간의 감옥 탈출 시작</button>
+        </div>
+
+        <!-- 게임 화면 -->
+        <div id="gameScreen">
+            <div class="header">
+                <div class="floor-display" id="floorDisplay">B25F</div>
+                <div class="era-display" id="eraDisplay">조선 후기</div>
+                <div class="timer-display">⏱️ <span id="timerDisplay">00:00</span></div>
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-label">균열 상태</span>
+                        <span class="stat-value"><span id="mistakeCount">0</span>/5</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">안전지대</span>
+                        <span class="stat-value" id="safeZoneStatus">❌</span>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="story-box">
+                <p class="question" id="question">문제가 여기에 표시됩니다.</p>
+                <div class="choices" id="choices"></div>
+            </div>
+        </div>
+
+        <!-- 리더보드 화면 -->
+        <div id="leaderboardScreen">
+            <h2 class="leaderboard-title">🏆 시간 수호자 명예의 전당</h2>
+            <p style="text-align: center; color: #a0a0b0; margin-bottom: 20px;">시공간 붕괴를 막고 역사를 지켜낸 영웅들</p>
+            
+            <div id="leaderboardContent">
+                <div class="no-records">
+                    <span class="loading-spinner"></span> 기록 불러오는 중...
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="modal-btn" onclick="hideLeaderboard()">돌아가기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div class="modal" id="modal">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+
+    <script>
+        // ========================================================
+        // ⚠️ 중요: 아래 URL을 Google Apps Script 웹 앱 URL로 교체하세요!
+        // 스프레드시트: 시간의 감옥
+        // https://docs.google.com/spreadsheets/d/1tjHyZZbhClVf-y-6rTbVvLodYjdZ6UDOGAj0tWupccI/edit
+        // ========================================================
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwelT-H56EcWCROjlmoXH-lqx7BxOsTorqXnEAT8emYh7ukQDInPpDOvCwaopnatys_Ow/exec';
+        // 예시: 'https://script.google.com/macros/s/AKfycbw.../exec'
+        // ========================================================
+
+        // ========== 새로운 25문항 문제 데이터 (3학년: 근현대사 + 세계사) ==========
+        const originalQuestions = [
+            // 🟥 조선 후기 (B25~B19) - 7문항
+            {
+                floor: 25,
+                era: "조선 후기 - 탕평 정치",
+                question: "영조·정조 시기에 붕당 간 대립을 완화하려는 목적으로 추진된 정치 운영 원리는?",
+                choices: ["환국 정치", "세도 정치", "탕평 정치", "군사정권", "붕당 정치"],
+                answer: 2
+            },
+            {
+                floor: 24,
+                era: "조선 후기 - 조세 개혁",
+                question: "공납을 토산물 대신 토지 결수에 따라 쌀·베·동전 등으로 내게 하여 방납의 폐단을 줄인 조세 제도는?",
+                choices: ["대동법", "영정법", "균역법", "호포법", "직전법"],
+                answer: 0
+            },
+            {
+                floor: 23,
+                era: "조선 후기 - 농민 봉기",
+                question: "1811년에 평안도 지역에서 지방 차별과 수탈에 반발해 봉기한 사건은?",
+                choices: ["임술 농민 봉기", "동학 농민 운동", "갑신정변", "임오군란", "홍경래의 난"],
+                answer: 4
+            },
+            {
+                floor: 22,
+                era: "조선 후기 - 왕권 강화",
+                question: "정조가 왕권 강화를 도모하며 정치·학문 운영의 중심 기구로 활용한 기관은?",
+                choices: ["성균관", "규장각", "비변사", "홍문관", "승정원"],
+                answer: 1
+            },
+            {
+                floor: 21,
+                era: "조선 후기 - 실학",
+                question: "조선 후기 실학의 성격을 가장 정확히 설명한 것은?",
+                choices: [
+                    "성리학의 교리 체계를 더 엄격히 정비한 학문이다.",
+                    "불교 중심의 사회 개혁을 주장한 사상이다.",
+                    "신분제를 유지한 채 왕권만 강화하려는 사상이다.",
+                    "현실 사회 문제 해결을 중시하며 제도·경제·기술 등을 연구한 학문 경향이다.",
+                    "외세 배격만을 목표로 한 사상이다."
+                ],
+                answer: 3
+            },
+            {
+                floor: 20,
+                era: "조선 후기 - 군사 제도",
+                question: "조선 후기 '5군영' 체제에 포함되지 않는 군사 조직은?",
+                choices: ["훈련도감", "어영청", "금위영", "별기군", "총융청"],
+                answer: 3
+            },
+            {
+                floor: 19,
+                era: "조선 후기 - 신분 변동",
+                question: "조선 후기 신분 질서 동요를 가장 직접적으로 보여 주는 사례는?",
+                choices: [
+                    "공명첩의 발급으로 신분 상승 통로가 확대됨",
+                    "과거제 폐지로 신분제가 약화됨",
+                    "노비제가 강화되어 신분 이동이 차단됨",
+                    "서얼의 관직 진출이 완전히 금지됨",
+                    "양반 수가 감소하여 상민이 사라짐"
+                ],
+                answer: 0
+            },
+            // 🟨 근대 한국사 (B18~B11) - 8문항
+            {
+                floor: 18,
+                era: "개항기 - 강화도 조약",
+                question: "조선이 일본의 강요로 체결하여 문호를 개방하게 된 조약은?",
+                choices: ["임오군란", "갑신정변", "동학 농민 운동", "을사늑약", "강화도 조약"],
+                answer: 4
+            },
+            {
+                floor: 17,
+                era: "근대 - 동학 농민 운동",
+                question: "동학 농민 운동의 요구로 옳은 것은?",
+                choices: ["갑오개혁 반대", "탐관오리 처벌과 폐정 개혁", "한일 병합 추진", "왕정 복고", "식민 통치 수용"],
+                answer: 1
+            },
+            {
+                floor: 16,
+                era: "일제강점기 - 임시정부",
+                question: "1919년 3·1 운동을 계기로 수립된 독립운동의 최고 지도 기구는?",
+                choices: ["대한광복회", "의열단", "대한민국 임시 정부", "신민회", "신간회"],
+                answer: 2
+            },
+            {
+                floor: 15,
+                era: "일제강점기 - 무단 통치",
+                question: "일제의 무단 통치(1910년대)의 특징으로 옳은 것은?",
+                choices: [
+                    "언론·출판·집회 자유 확대",
+                    "민족 자치 허용",
+                    "회사령 폐지",
+                    "헌법 제정과 의회 설치",
+                    "헌병 경찰 중심의 강압 통치"
+                ],
+                answer: 4
+            },
+            {
+                floor: 14,
+                era: "일제강점기 - 민족 운동",
+                question: "1927년에 결성되어 '민족 유일당 운동' 흐름 속에서 활동한 단체는?",
+                choices: ["독립협회", "의열단", "광복군", "신간회", "대한자강회"],
+                answer: 3
+            },
+            {
+                floor: 13,
+                era: "광복과 분단",
+                question: "광복 이후 1945년 한반도 분단이 고착되는 출발점이 된 상황은?",
+                choices: [
+                    "모스크바 3국 외상 회의 단독 결정",
+                    "신탁통치 즉시 시행",
+                    "대한민국 정부 수립",
+                    "6·25 전쟁 발발",
+                    "미·소에 의한 군정 실시(38선 기준 점령)"
+                ],
+                answer: 4
+            },
+            {
+                floor: 12,
+                era: "대한민국 수립",
+                question: "대한민국 정부 수립 이후 제정된 헌법이 채택한 국가 형태는?",
+                choices: ["왕정", "공화정 부정", "민주 공화국", "식민지 자치", "군주 전제"],
+                answer: 2
+            },
+            {
+                floor: 11,
+                era: "민주화 운동 - 4·19",
+                question: "4·19 혁명의 직접적 계기로 가장 적절한 것은?",
+                choices: [
+                    "3·15 부정 선거에 대한 항거",
+                    "6·25 전쟁 발발",
+                    "10월 유신 선포",
+                    "외환 위기",
+                    "5·18 민주화 운동"
+                ],
+                answer: 0
+            },
+            // 🟦 현대 한국사 (B10~B6) - 5문항
+            {
+                floor: 10,
+                era: "민주화 - 6월 항쟁",
+                question: "1987년 6월 민주 항쟁 이후 제도적으로 확정된 변화는?",
+                choices: [
+                    "대통령 간선제 유지",
+                    "유신 헌법 부활",
+                    "군부 통치 강화",
+                    "대통령 직선제 도입(개헌)",
+                    "사회주의 헌법 제정"
+                ],
+                answer: 3
+            },
+            {
+                floor: 9,
+                era: "남북 관계 - UN 가입",
+                question: "남북한이 유엔(UN)에 동시 가입한 해는?",
+                choices: ["1991년", "1995년", "2000년", "1987년", "2007년"],
+                answer: 0
+            },
+            {
+                floor: 8,
+                era: "현대 경제 - 외환 위기",
+                question: "1997년 외환 위기 당시 한국 경제가 겪은 대표적 조치로 옳은 것은?",
+                choices: [
+                    "식민지 경제 체제 재편",
+                    "남북 경제 통합",
+                    "국가 주도의 계획 경제 전환",
+                    "경제 봉쇄로 무역 중단",
+                    "국제통화기금(IMF) 구제금융"
+                ],
+                answer: 4
+            },
+            {
+                floor: 7,
+                era: "6·25 전쟁",
+                question: "6·25 전쟁의 결과로 가장 적절한 것은?",
+                choices: [
+                    "단일 정부 수립",
+                    "일본 식민 통치 재개",
+                    "유엔 탈퇴",
+                    "왕정 복고",
+                    "분단의 고착화와 냉전 구조 심화"
+                ],
+                answer: 4
+            },
+            {
+                floor: 6,
+                era: "남북 관계 - 정상 회담",
+                question: "2000년대 남북 관계 변화의 사례로 옳은 것은?",
+                choices: [
+                    "남북 UN 동시 탈퇴",
+                    "군사 충돌의 상시화만 지속",
+                    "남북 정상 회담 개최(2000, 2007 등)",
+                    "통일 정부 즉각 수립",
+                    "분단선 폐지"
+                ],
+                answer: 2
+            },
+            // 🟩 유럽 서양사 (B5~B1) - 5문항
+            {
+                floor: 5,
+                era: "프랑스 혁명",
+                question: "프랑스 혁명 이후 사회 질서 변화로 가장 적절한 것은?",
+                choices: ["왕권 강화", "봉건제 강화", "식민지 확대", "신분제 폐지", "교황권 강화"],
+                answer: 3
+            },
+            {
+                floor: 4,
+                era: "산업 혁명",
+                question: "산업 혁명으로 나타난 사회 변화로 가장 적절한 것은?",
+                choices: [
+                    "장원제 부활",
+                    "노동자 계급 성장과 도시화",
+                    "농노제 확대",
+                    "농업 중심 유지",
+                    "귀족 정치 강화"
+                ],
+                answer: 1
+            },
+            {
+                floor: 3,
+                era: "제1차 세계 대전",
+                question: "제1차 세계 대전의 성격을 가장 적절히 설명한 것은?",
+                choices: [
+                    "종교 개혁 전쟁",
+                    "절대 왕정 수호 전쟁",
+                    "식민지 독립 전쟁",
+                    "제국주의 국가 간 충돌",
+                    "냉전 시작"
+                ],
+                answer: 3
+            },
+            {
+                floor: 2,
+                era: "국제 연합(UN)",
+                question: "다음 중 국제연합(UN)의 특징으로 옳은 것만을 모두 고른 것은?\n\nㄱ. 국제 평화와 안전의 유지가 주요 목표이다.\nㄴ. 안전보장이사회는 상임이사국의 거부권 행사 구조를 가진다.\nㄷ. 모든 주요 결정이 '만장일치' 원칙으로만 이루어진다.\nㄹ. 제2차 세계 대전 이후 창설되었다.",
+                choices: ["ㄱ, ㄷ", "ㄴ, ㄷ", "ㄱ, ㄴ, ㄷ", "ㄷ, ㄹ", "ㄱ, ㄴ, ㄹ"],
+                answer: 4
+            },
+            {
+                floor: 1,
+                era: "냉전 시대",
+                question: "다음 중 냉전의 특징을 가장 정확히 설명한 것은?",
+                choices: [
+                    "미국과 소련이 유럽에서 직접 대규모 전면전을 벌였다.",
+                    "군사적 충돌은 전혀 없었고 외교 교섭만 존재했다.",
+                    "직접 충돌은 피하면서도, 이념·군사 동맹·경제 경쟁이 지속되고 한국전쟁·베트남전쟁 같은 '대리전'이 전개되었다.",
+                    "냉전은 제2차 세계 대전 이전부터 형성된 체제였다.",
+                    "냉전은 유럽 내부 문제로만 한정되어 아시아·아프리카와 무관했다."
+                ],
+                answer: 2
+            }
+        ];
+
+        // ========== 극적인 스토리 메시지 ==========
+        const storyMessages = {
+            correct: [
+                "역사의 문이 열렸습니다!<br>시공간이 안정되고 있습니다...",
+                "정확합니다!<br>균열이 조금씩 닫히고 있어요!",
+                "훌륭해요!<br>역사의 빛이 어둠을 밀어내고 있습니다!",
+                "맞았습니다!<br>시간의 사슬이 하나 풀렸습니다!",
+                "완벽합니다!<br>과거의 기억이 되살아나고 있어요!"
+            ],
+            wrong: [
+                "쿠쿠쿵... 지하 깊은 곳에서 무언가가 깨어나는 소리가 들립니다...<br>균열이 더 커지고 있어요!",
+                "시공간에 금이 가기 시작합니다!<br>역사가 흔들리고 있어요!",
+                "경고! 시간의 파동이 감지되었습니다!<br>현실이 왜곡되고 있습니다!",
+                "균열에서 어둠이 새어나오고 있습니다...<br>서둘러야 해요!",
+                "역사의 조각들이 흩어지기 시작합니다!<br>정신을 차리세요!"
+            ],
+            safeZone: "🛡️ 안전지대 도달!<br><br>B10층을 통과했습니다!<br>이제부터 오답이 나와도 여기로 복귀합니다.<br><br>당신의 역사 지식이 보호막이 되었습니다!",
+            gameOver: [
+                "💀 시공간 완전 붕괴",
+                "균열이 한계를 넘어섰습니다...<br><br>조선의 기록이 사라지고...<br>근대의 기억이 흩어지고...<br>현대의 역사마저 붕괴합니다.<br><br>당신은 역사 속에서 잊혀졌습니다..."
+            ],
+            victory: [
+                "🌟 시간의 수호자 귀환",
+                "찬란한 빛이 당신을 감쌉니다!<br><br>모든 균열이 닫히고<br>역사가 올바른 흐름을 되찾았습니다!<br><br>당신은 진정한 시간의 수호자입니다!"
+            ]
+        };
+
+        // ========== 셔플된 문제 데이터 ==========
+        let questions = [];
+
+        // ========== 게임 상태 변수 ==========
+        let currentFloor = 0;
+        let mistakes = 0;
+        let safeZone = -1;
+        let playerName = '';
+        let startTime = null;
+        let timerInterval = null;
+        let isProcessing = false;
+
+        // ========== 선택지 셔플 함수 ==========
+        function shuffleChoices(questionData) {
+            const choices = [...questionData.choices];
+            const correctAnswer = choices[questionData.answer];
+            
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+            
+            const newAnswerIndex = choices.indexOf(correctAnswer);
+            
+            return {
+                ...questionData,
+                choices: choices,
+                answer: newAnswerIndex
+            };
+        }
+
+        function shuffleAllQuestions() {
+            questions = originalQuestions.map(q => shuffleChoices(q));
+        }
+
+        function shuffleQuestionsFromFloor(startIndex) {
+            for (let i = startIndex; i < questions.length; i++) {
+                questions[i] = shuffleChoices(originalQuestions[i]);
+            }
+        }
+
+        function isConfigured() {
+            return GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_SCRIPT_URL_HERE';
+        }
+
+        function getRandomMessage(type) {
+            const messages = storyMessages[type];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        document.getElementById('playerName').addEventListener('input', function() {
+            const name = this.value.trim();
+            document.getElementById('startBtn').disabled = name.length < 2;
+        });
+
+        function startGame() {
+            playerName = document.getElementById('playerName').value.trim();
+            if (playerName.length < 2) {
+                alert('이름을 2자 이상 입력해주세요!');
+                return;
+            }
+
+            shuffleAllQuestions();
+
+            document.getElementById('introScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            loadQuestion();
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+        }
+
+        function loadQuestion() {
+            const q = questions[currentFloor];
+            const floorNum = q.floor;
+            
+            document.getElementById('floorDisplay').textContent = `B${floorNum}F`;
+            document.getElementById('eraDisplay').textContent = q.era;
+            document.getElementById('question').textContent = q.question;
+            
+            const choicesDiv = document.getElementById('choices');
+            choicesDiv.innerHTML = '';
+            
+            setTimeout(() => {
+                q.choices.forEach((choice, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = `${index + 1}. ${choice}`;
+                    
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!isProcessing) {
+                            checkAnswer(index);
+                        }
+                    });
+                    
+                    choicesDiv.appendChild(btn);
+                });
+            }, 100);
+
+            const progress = ((25 - currentFloor) / 25) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('mistakeCount').textContent = mistakes;
+            document.getElementById('safeZoneStatus').textContent = safeZone !== -1 ? '✅' : '❌';
+
+            if (mistakes >= 3) {
+                document.getElementById('mistakeCount').parentElement.classList.add('danger-text');
+            }
+        }
+
+        function checkAnswer(selected) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const q = questions[currentFloor];
+            
+            if (selected === q.answer) {
+                document.getElementById('gameContainer').classList.add('success-glow');
+                
+                if (currentFloor === 15) {
+                    safeZone = 16;
+                    showModal(
+                        "🛡️ 안전지대 활성화!",
+                        storyMessages.safeZone,
+                        () => {
+                            isProcessing = false;
+                            currentFloor++;
+                            if (currentFloor < questions.length) {
+                                loadQuestion();
+                            } else {
+                                showVictory();
+                            }
+                        }
+                    );
+                } else {
+                    currentFloor++;
+                    if (currentFloor < questions.length) {
+                        const nextFloor = questions[currentFloor].floor;
+                        showModal(
+                            "✅ 정답입니다!",
+                            `${getRandomMessage('correct')}<br><br>→ B${nextFloor}F로 상승 중...`,
+                            () => {
+                                isProcessing = false;
+                                loadQuestion();
+                            }
+                        );
+                    } else {
+                        isProcessing = false;
+                        showVictory();
+                    }
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('gameContainer').classList.remove('success-glow');
+                }, 1000);
+                
+            } else {
+                mistakes++;
+                document.getElementById('gameContainer').classList.add('shock-effect');
+                document.getElementById('gameContainer').classList.add('collapse-warning');
+                
+                setTimeout(() => {
+                    document.getElementById('gameContainer').classList.remove('shock-effect');
+                    document.getElementById('gameContainer').classList.remove('collapse-warning');
+                }, 500);
+                
+                if (mistakes >= 5) {
+                    isProcessing = false;
+                    showGameOver();
+                } else {
+                    let resetFloor;
+                    let resetMessage;
+                    
+                    if (safeZone !== -1) {
+                        resetFloor = safeZone;
+                        resetMessage = 'B10F 안전지대';
+                    } else {
+                        resetFloor = 0;
+                        resetMessage = 'B25F';
+                    }
+                    
+                    const dangerLevel = mistakes >= 3 ? '<span style="color: #ff4444; font-weight: bold;">⚠️ 위험!</span> ' : '';
+                    
+                    showModal(
+                        "⚡ 시공간 충격!",
+                        `${getRandomMessage('wrong')}<br><br>${dangerLevel}균열 상태: <strong style="color: #ff0080;">${mistakes}/5</strong><br><br>→ ${resetMessage}로 복귀합니다...`,
+                        () => {
+                            isProcessing = false;
+                            currentFloor = resetFloor;
+                            shuffleQuestionsFromFloor(resetFloor);
+                            loadQuestion();
+                        }
+                    );
+                }
+            }
+        }
+
+        function showModal(title, message, callback) {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>${title}</h2>
+                <p>${message}</p>
+                <button class="modal-btn" id="modalBtn">확인</button>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            const modalBtn = document.getElementById('modalBtn');
+            modalBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                modal.style.display = 'none';
+                if (callback) {
+                    setTimeout(callback, 150);
+                }
+            });
+        }
+
+        function showGameOver() {
+            clearInterval(timerInterval);
+            
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2 style="background: linear-gradient(135deg, #ff0080, #ff4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${storyMessages.gameOver[0]}</h2>
+                <p>${storyMessages.gameOver[1]}</p>
+                <p style="color: #666; font-size: 0.9em;">오답 횟수: ${mistakes}회</p>
+                <button class="modal-btn" id="resetBtn">처음부터 다시 도전</button>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            document.getElementById('resetBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                resetGame();
+            });
+        }
+
+        async function showVictory() {
+            clearInterval(timerInterval);
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeString = `${minutes}분 ${seconds}초`;
+
+            await saveToLeaderboard(playerName, elapsed, mistakes);
+
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <h2>${storyMessages.victory[0]}</h2>
+                <p>${storyMessages.victory[1]}</p>
+                <p style="margin-top: 20px;">
+                    축하합니다, <strong style="color: #00ffc8;">${playerName}</strong> 수호자님!
+                </p>
+                <p style="margin-top: 15px;">
+                    ⏱️ 탈출 시간: <strong style="color: #00ffc8;">${timeString}</strong><br>
+                    💔 균열 발생: <strong style="color: #ff0080;">${mistakes}회</strong>
+                </p>
+                <p style="font-size: 0.9em; color: #a0a0b0; margin-top: 15px;">기록이 명예의 전당에 등록되었습니다!</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="modal-btn" id="retryBtn">다시 도전</button>
+                    <button class="modal-btn" id="leaderboardBtn" style="background: linear-gradient(135deg, #ff0080, #7b2fff);">명예의 전당</button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            
+            document.getElementById('retryBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                resetGame();
+            });
+            
+            document.getElementById('leaderboardBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'none';
+                showLeaderboard();
+            });
+        }
+
+        async function saveToLeaderboard(name, timeSeconds, mistakes) {
+            if (!isConfigured()) {
+                console.warn('Google Script URL이 설정되지 않았습니다.');
+                return;
+            }
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        time: timeSeconds,
+                        mistakes: mistakes
+                    })
+                });
+                console.log('기록 저장 완료');
+            } catch (error) {
+                console.error('기록 저장 실패:', error);
+            }
+        }
+
+        async function loadLeaderboard() {
+            if (!isConfigured()) {
+                return null;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('리더보드 로드 실패:', error);
+                return null;
+            }
+        }
+
+        async function showLeaderboard() {
+            document.getElementById('introScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('leaderboardScreen').style.display = 'block';
+
+            const contentDiv = document.getElementById('leaderboardContent');
+            
+            if (!isConfigured()) {
+                contentDiv.innerHTML = `
+                    <div class="setup-notice">
+                        ⚠️ Google Sheets 연동이 필요합니다.<br><br>
+                        HTML 파일의 <code>GOOGLE_SCRIPT_URL</code> 값을<br>
+                        Google Apps Script 웹 앱 URL로 교체해주세요.
+                    </div>
+                `;
+                return;
+            }
+
+            contentDiv.innerHTML = '<div class="no-records"><span class="loading-spinner"></span> 기록 불러오는 중...</div>';
+
+            try {
+                const leaderboard = await loadLeaderboard();
+
+                if (!leaderboard || leaderboard.length === 0) {
+                    contentDiv.innerHTML = '<div class="no-records">아직 탈출 성공 기록이 없습니다.<br>첫 번째 시간 수호자가 되어보세요! 🦸</div>';
+                    return;
+                }
+
+                let tableHTML = `
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>수호자</th>
+                                <th>시간</th>
+                                <th>균열</th>
+                                <th>날짜</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                leaderboard.slice(0, 20).forEach((record, index) => {
+                    const rank = index + 1;
+                    const minutes = Math.floor(record.time / 60);
+                    const seconds = record.time % 60;
+                    const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    let dateStr = record.date || '-';
+                    if (dateStr.includes('/') || dateStr.includes('-')) {
+                        try {
+                            const d = new Date(dateStr);
+                            dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+                        } catch (e) {}
+                    }
+
+                    let rankBadge = rank;
+                    if (rank === 1) rankBadge = '<span class="rank-badge gold">1</span>';
+                    else if (rank === 2) rankBadge = '<span class="rank-badge silver">2</span>';
+                    else if (rank === 3) rankBadge = '<span class="rank-badge bronze">3</span>';
+
+                    tableHTML += `
+                        <tr>
+                            <td>${rankBadge}</td>
+                            <td>${escapeHTML(record.name)}</td>
+                            <td>${timeStr}</td>
+                            <td>${record.mistakes}회</td>
+                            <td>${dateStr}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += '</tbody></table>';
+                contentDiv.innerHTML = tableHTML;
+
+            } catch (error) {
+                console.error('리더보드 로드 실패:', error);
+                contentDiv.innerHTML = '<div class="no-records">기록을 불러오는데 실패했습니다.</div>';
+            }
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('leaderboardScreen').style.display = 'none';
+            document.getElementById('introScreen').style.display = 'block';
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function resetGame() {
+            currentFloor = 0;
+            mistakes = 0;
+            safeZone = -1;
+            startTime = null;
+            isProcessing = false;
+            clearInterval(timerInterval);
+            
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('leaderboardScreen').style.display = 'none';
+            document.getElementById('introScreen').style.display = 'block';
+            document.getElementById('playerName').value = playerName;
+            document.getElementById('startBtn').disabled = playerName.length < 2;
+            
+            const mistakeEl = document.getElementById('mistakeCount');
+            if (mistakeEl && mistakeEl.parentElement) {
+                mistakeEl.parentElement.classList.remove('danger-text');
+            }
+        }
+
+        document.getElementById('startBtn').disabled = true;
+    </script>
+</body>
+</html>
