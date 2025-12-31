@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>역사의 균열 - 지하 25층 탈출</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
     <style>
@@ -10,6 +10,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -223,37 +224,30 @@
             font-size: 1.05em;
             cursor: pointer;
             border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.15s ease-out;
             text-align: left;
             font-family: inherit;
             position: relative;
             overflow: hidden;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
 
-        .choice-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 200, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .choice-btn:hover {
-            background: linear-gradient(135deg, rgba(123, 47, 255, 0.2), rgba(0, 255, 200, 0.15));
-            border-color: #00ffc8;
-            transform: translateX(8px);
-            box-shadow: 0 0 30px rgba(0, 255, 200, 0.3);
-        }
-
-        .choice-btn:hover::before {
-            left: 100%;
+        /* 호버 효과는 마우스에서만 */
+        @media (hover: hover) {
+            .choice-btn:hover {
+                background: linear-gradient(135deg, rgba(123, 47, 255, 0.2), rgba(0, 255, 200, 0.15));
+                border-color: #00ffc8;
+                transform: translateX(8px);
+                box-shadow: 0 0 30px rgba(0, 255, 200, 0.3);
+            }
         }
 
         .choice-btn:active {
-            transform: translateX(4px) scale(0.98);
+            transform: scale(0.98);
+            background: linear-gradient(135deg, rgba(123, 47, 255, 0.3), rgba(0, 255, 200, 0.2));
         }
 
         /* 모달 스타일 */
@@ -314,6 +308,10 @@
             transition: all 0.3s;
             box-shadow: 0 5px 25px rgba(123, 47, 255, 0.4);
             font-family: inherit;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
         }
 
         .modal-btn:hover {
@@ -696,12 +694,12 @@
         // ========================================================
         // ⚠️ 중요: 아래 URL을 Google Apps Script 웹 앱 URL로 교체하세요!
         // ========================================================
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby98zwMfX6uZ6ke4i0QQLsTfDQfSPehx20CFtiYGCMHAufXZGQxbQGGGSps58Km_hn6Ng/exec';
+        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_SCRIPT_URL_HERE';
         // 예시: 'https://script.google.com/macros/s/AKfycbw.../exec'
         // ========================================================
 
         // ========== 원본 문제 데이터 (그대로 유지) ==========
-        const questions = [
+        const originalQuestions = [
             {
                 floor: 25,
                 era: "고려 건국",
@@ -885,6 +883,9 @@
             }
         ];
 
+        // ========== 셔플된 문제 데이터 ==========
+        let questions = [];
+
         // ========== 게임 상태 변수 ==========
         let currentFloor = 0;
         let mistakes = 0;
@@ -892,6 +893,40 @@
         let playerName = '';
         let startTime = null;
         let timerInterval = null;
+        let isProcessing = false; // 중복 클릭 방지
+
+        // ========== 선택지 셔플 함수 ==========
+        function shuffleChoices(questionData) {
+            const choices = [...questionData.choices];
+            const correctAnswer = choices[questionData.answer];
+            
+            // Fisher-Yates 셔플
+            for (let i = choices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choices[i], choices[j]] = [choices[j], choices[i]];
+            }
+            
+            // 새로운 정답 인덱스 찾기
+            const newAnswerIndex = choices.indexOf(correctAnswer);
+            
+            return {
+                ...questionData,
+                choices: choices,
+                answer: newAnswerIndex
+            };
+        }
+
+        // ========== 모든 문제 셔플 ==========
+        function shuffleAllQuestions() {
+            questions = originalQuestions.map(q => shuffleChoices(q));
+        }
+
+        // ========== 특정 범위 문제만 셔플 ==========
+        function shuffleQuestionsFromFloor(startIndex) {
+            for (let i = startIndex; i < questions.length; i++) {
+                questions[i] = shuffleChoices(originalQuestions[i]);
+            }
+        }
 
         // ========== URL 설정 확인 ==========
         function isConfigured() {
@@ -911,6 +946,9 @@
                 alert('이름을 2자 이상 입력해주세요!');
                 return;
             }
+
+            // 게임 시작 시 모든 문제 셔플
+            shuffleAllQuestions();
 
             document.getElementById('introScreen').style.display = 'none';
             document.getElementById('gameScreen').style.display = 'block';
@@ -941,13 +979,25 @@
             const choicesDiv = document.getElementById('choices');
             choicesDiv.innerHTML = '';
             
-            q.choices.forEach((choice, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'choice-btn';
-                btn.textContent = `${index + 1}. ${choice}`;
-                btn.onclick = () => checkAnswer(index);
-                choicesDiv.appendChild(btn);
-            });
+            // 약간의 딜레이 후 버튼 생성 (모바일 터치 문제 방지)
+            setTimeout(() => {
+                q.choices.forEach((choice, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+                    btn.textContent = `${index + 1}. ${choice}`;
+                    
+                    // 터치와 클릭 모두 처리
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!isProcessing) {
+                            checkAnswer(index);
+                        }
+                    });
+                    
+                    choicesDiv.appendChild(btn);
+                });
+            }, 100);
 
             const progress = ((25 - currentFloor) / 25) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
@@ -955,8 +1005,11 @@
             document.getElementById('safeZoneStatus').textContent = safeZone !== -1 ? '✅' : '❌';
         }
 
-        // ========== 정답 확인 (원본 로직 유지) ==========
+        // ========== 정답 확인 ==========
         function checkAnswer(selected) {
+            if (isProcessing) return;
+            isProcessing = true;
+
             const q = questions[currentFloor];
             
             if (selected === q.answer) {
@@ -965,11 +1018,12 @@
                 
                 // B10 통과 시 안전지대 활성화
                 if (currentFloor === 15) { // 배열 인덱스 15 = B10F
-                    safeZone = 15.5; // 안전지대 설정
+                    safeZone = 16; // 안전지대 = B9F (인덱스 16)
                     showModal(
                         "🛡️ 안전지대 활성화!",
-                        `B10F 통과!<br><br>이제부터 오답이 나와도<br>안전지대(B9.5F)로 복귀합니다.`,
+                        `B10F 통과!<br><br>이제부터 오답이 나와도<br>B10F(안전지대)로 복귀합니다.`,
                         () => {
+                            isProcessing = false;
                             currentFloor++;
                             if (currentFloor < questions.length) {
                                 loadQuestion();
@@ -984,9 +1038,13 @@
                         showModal(
                             "✅ 정답입니다!",
                             `문이 열렸습니다.<br>B${questions[currentFloor].floor}F로 올라갑니다...`,
-                            loadQuestion
+                            () => {
+                                isProcessing = false;
+                                loadQuestion();
+                            }
                         );
                     } else {
+                        isProcessing = false;
                         showVictory();
                     }
                 }
@@ -1005,22 +1063,31 @@
                 }, 500);
                 
                 if (mistakes >= 5) {
+                    isProcessing = false;
                     showGameOver();
                 } else {
-                    // 안전지대 있으면 그곳으로, 없으면 처음으로
-                    const resetFloor = safeZone !== -1 ? Math.ceil(safeZone) : 0;
+                    // 복귀할 층 결정
+                    let resetFloor;
+                    let resetMessage;
+                    
+                    if (safeZone !== -1) {
+                        // 안전지대 활성화 상태: B10F(인덱스 16)로 복귀
+                        resetFloor = safeZone;
+                        resetMessage = 'B10F 안전지대';
+                    } else {
+                        // 안전지대 없음: B25F(인덱스 0)로 복귀
+                        resetFloor = 0;
+                        resetMessage = 'B25F';
+                    }
                     
                     showModal(
                         "⚡ 전기 충격!",
-                        `손잡이를 잡고 문을 열려고 하는 순간...<br>지지지직!! 의식을 잃고 말았습니다.<br><br>역사의 균열이 심해지고 있습니다...<br>(${mistakes}/5)<br><br>${safeZone !== -1 ? 'B9.5F 안전지대' : 'B25F'}로 복귀합니다.`,
+                        `손잡이를 잡고 문을 열려고 하는 순간...<br>지지지직!! 의식을 잃고 말았습니다.<br><br>역사의 균열이 심해지고 있습니다...<br>(${mistakes}/5)<br><br>${resetMessage}로 복귀합니다.`,
                         () => {
-                            if (safeZone !== -1 && currentFloor < 16) {
-                                // B9 이상에서 틀린 경우 안전지대로
-                                currentFloor = 16; // B9F
-                            } else if (safeZone === -1) {
-                                // 안전지대 없으면 처음으로
-                                currentFloor = 0;
-                            }
+                            isProcessing = false;
+                            currentFloor = resetFloor;
+                            // 복귀 시 해당 층부터 선택지 다시 셔플
+                            shuffleQuestionsFromFloor(resetFloor);
                             loadQuestion();
                         }
                     );
@@ -1036,23 +1103,22 @@
             content.innerHTML = `
                 <h2>${title}</h2>
                 <p>${message}</p>
-                <button class="modal-btn" onclick="closeModal(${callback ? 'modalCallback' : 'null'})">확인</button>
+                <button class="modal-btn" id="modalBtn">확인</button>
             `;
             
-            if (callback) {
-                window.modalCallback = callback;
-            }
-            
             modal.style.display = 'flex';
-        }
-
-        // ========== 모달 닫기 ==========
-        function closeModal(callback) {
-            document.getElementById('modal').style.display = 'none';
-            if (callback) {
-                callback();
-                window.modalCallback = null;
-            }
+            
+            // 버튼에 이벤트 리스너 추가
+            const modalBtn = document.getElementById('modalBtn');
+            modalBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                modal.style.display = 'none';
+                if (callback) {
+                    // 딜레이를 주어 다음 화면의 버튼이 눌리는 것 방지
+                    setTimeout(callback, 150);
+                }
+            });
         }
 
         // ========== 게임 오버 ==========
@@ -1066,10 +1132,15 @@
                 <h2 style="background: linear-gradient(135deg, #ff0080, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">💥 균열 붕괴!</h2>
                 <p>역사의 균열이 완전히 커져<br>걷잡을 수 없게 되었습니다.<br><br>고려와 조선의 역사가 사라졌습니다....</p>
                 <p>오답 횟수: ${mistakes}회</p>
-                <button class="modal-btn" onclick="resetGame()">처음부터 다시 시작</button>
+                <button class="modal-btn" id="resetBtn">처음부터 다시 시작</button>
             `;
             
             modal.style.display = 'flex';
+            
+            document.getElementById('resetBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                resetGame();
+            });
         }
 
         // ========== 승리 + 리더보드 저장 ==========
@@ -1097,12 +1168,23 @@
                 </p>
                 <p style="font-size: 0.9em; color: #a0a0b0; margin-top: 15px;">기록이 명예의 전당에 등록되었습니다!</p>
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <button class="modal-btn" onclick="resetGame()">다시 도전</button>
-                    <button class="modal-btn" onclick="closeModal(null); showLeaderboard();" style="background: linear-gradient(135deg, #ff0080, #7b2fff);">명예의 전당</button>
+                    <button class="modal-btn" id="retryBtn">다시 도전</button>
+                    <button class="modal-btn" id="leaderboardBtn" style="background: linear-gradient(135deg, #ff0080, #7b2fff);">명예의 전당</button>
                 </div>
             `;
             
             modal.style.display = 'flex';
+            
+            document.getElementById('retryBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                resetGame();
+            });
+            
+            document.getElementById('leaderboardBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'none';
+                showLeaderboard();
+            });
         }
 
         // ========== Google Sheets에 기록 저장 ==========
@@ -1251,6 +1333,7 @@
             mistakes = 0;
             safeZone = -1;
             startTime = null;
+            isProcessing = false;
             clearInterval(timerInterval);
             
             document.getElementById('modal').style.display = 'none';
